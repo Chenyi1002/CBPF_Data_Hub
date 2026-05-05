@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CBPF Contributions</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #222;
+      background: #fff;
+    }
+
+    .pbiclc-page-controls,
+    .pbiclc-compare-controls {
+      max-width: 900px;
+      margin: 0 auto 16px auto;
+      padding: 12px 14px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      background: #fafafa;
+      box-sizing: border-box;
+    }
+
+    .pbiclc-page-controls label,
+    .pbiclc-compare-controls label {
+      margin-right: 6px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .pbiclc-page-controls select,
+    .pbiclc-compare-controls select,
+    .pbiclc-compare-controls button {
+      margin: 4px 12px 4px 0;
+      padding: 6px 8px;
+      border: 1px solid #bdbdbd;
+      border-radius: 4px;
+      background: white;
+      font-size: 14px;
+    }
+
+    .pbiclc-compare-controls button {
+      cursor: pointer;
+      background: #1f69b3;
+      border-color: #1f69b3;
+      color: white;
+      font-weight: 700;
+    }
+
+    .pbiclc-compare-note {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    #d3chartcontainerpbiclc {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    #pbiclcChangeTables {
+      max-width: 900px;
+      margin: 22px auto 0 auto;
+      box-sizing: border-box;
+    }
+
+    .pbiclc-change-title {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      color: #1f69b3;
+      font-weight: 700;
+    }
+
+    .pbiclc-change-subtitle {
+      margin: 0 0 14px 0;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .pbiclc-change-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .pbiclc-change-card {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .pbiclc-change-card h3 {
+      margin: 0;
+      padding: 10px 12px;
+      background: #f3f7fb;
+      border-bottom: 1px solid #d9d9d9;
+      font-size: 16px;
+      color: #1f69b3;
+    }
+
+    .pbiclc-change-summary {
+      margin: 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #555;
+      border-bottom: 1px solid #eee;
+      line-height: 1.4;
+    }
+
+    .pbiclc-change-table-wrap {
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    table.pbiclc-change-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .pbiclc-change-table th,
+    .pbiclc-change-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid #eeeeee;
+      text-align: right;
+      white-space: nowrap;
+      vertical-align: top;
+    }
+
+    .pbiclc-change-table th:first-child,
+    .pbiclc-change-table td:first-child {
+      text-align: left;
+      white-space: normal;
+      min-width: 120px;
+    }
+
+    .pbiclc-change-table th:last-child.pbiclc-donor-list-header,
+    .pbiclc-change-table td.pbiclc-donor-list-cell {
+      text-align: left;
+      white-space: normal;
+      min-width: 140px;
+    }
+
+    .pbiclc-change-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8f8f8;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .pbiclc-change-table tr.pbiclc-increased td {
+      color: #188038;
+      font-weight: 700;
+    }
+
+    .pbiclc-change-table tr.pbiclc-unchanged td {
+      color: #222;
+      font-weight: 400;
+    }
+
+    .pbiclc-empty,
+    .pbiclc-error,
+    .pbiclc-loading {
+      padding: 14px 12px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .pbiclc-error {
+      color: #b00020;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+      }
+
+      .pbiclc-change-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <!-- Load D3 once so the chart and the comparison tables use the same D3 version. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+</head>
+
+<body>
+  <div class="pbiclc-page-controls">
+    <label for="dateFilter">Select date:</label>
+    <select id="dateFilter"></select>
+  </div>
+
+  <div
+    id="d3chartcontainerpbiclc"
+    data-title="CBPF Contributions"
+    data-year="2026"
+    data-contribution="total"
+    data-selectedcountry="none"
+    data-showhelp="false"
+    data-showlink="true"
+    data-responsive="true"
+    data-lazyload="false">
+  </div>
+
+  <section id="pbiclcChangeTables" aria-label="CBPF contribution changes">
+    <div class="pbiclc-compare-controls">
+      <label for="compareFromDate">Compare from:</label>
+      <select id="compareFromDate"></select>
+
+      <label for="compareToDate">to:</label>
+      <select id="compareToDate"></select>
+
+      <label for="compareFiscalYear">Fiscal year:</label>
+      <select id="compareFiscalYear"></select>
+
+      <button id="updateComparison" type="button">Update comparison</button>
+
+      <div class="pbiclc-compare-note">
+        Comparison logic: first filter both selected CSV files by the selected FiscalYear,
+        then calculate <strong>total_contribution = PaidAmt + PledgeAmt</strong>.
+        The donor table shows current-year donors with increases or no change; increased rows are green and unchanged rows are black.
+        The CBPF table shows which PooledFundName entries received increased contribution from the donors that increased.
+      </div>
+    </div>
+
+    <h2 class="pbiclc-change-title">Contribution changes between selected dates</h2>
+    <p id="pbiclcChangeSubtitle" class="pbiclc-change-subtitle"></p>
+
+    <div class="pbiclc-change-grid">
+      <div class="pbiclc-change-card">
+        <h3>Donor Changes</h3>
+        <p id="donorChangeSummary" class="pbiclc-change-summary"></p>
+        <div id="donorChangeTable" class="pbiclc-change-table-wrap"></div>
+      </div>
+
+      <div class="pbiclc-change-card">
+        <h3>CBPF Changes</h3>
+        <p id="cbpfChangeSummary" class="pbiclc-change-summary"></p>
+        <div id="cbpfChangeTable" class="pbiclc-change-table-wrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const availableDates = [
+      "04_21_2026",
+      "04_20_2026",
+      "04_19_2026",
+      "04_18_2026",
+      "04_17_2026",
+      "04_16_2026",
+      "04_15_2026",
+      "04_14_2026",
+      "04_13_2026",
+      "04_12_2026",
+      "04_11_2026",
+      "04_10_2026",
+      "04_09_2026",
+      "04_08_2026",
+      "04_07_2026",
+      "04_06_2026",
+      "04_05_2026",
+      "04_04_2026",
+      "04_03_2026",
+      "04_02_2026"
+    ];
+
+    // Keep this path consistent with d3chartpbiclc.js.
+    // If the CSV folder is beside this HTML file, change it to "./data/".
+    const DATA_BASE_PATH = "/data/";
+    const EPSILON = 0.000001;
+
+    const params = new URLSearchParams(window.location.search);
+    const chartContainer = document.getElementById("d3chartcontainerpbiclc");
+    const defaultChartDate = availableDates[0];
+    const defaultCompareFromDate = availableDates[1] || availableDates[0];
+    const defaultCompareToDate = params.get("date") || defaultChartDate;
+    const defaultFiscalYear = getInitialFiscalYear();
+
+    const chartDate = normalizeDateParam(params.get("date"), defaultChartDate);
+    const compareFromDate = normalizeDateParam(params.get("from"), defaultCompareFromDate);
+    const compareToDate = normalizeDateParam(params.get("to"), defaultCompareToDate);
+
+    const dateFilter = document.getElementById("dateFilter");
+    const compareFromDateSelect = document.getElementById("compareFromDate");
+    const compareToDateSelect = document.getElementById("compareToDate");
+    const compareFiscalYearSelect = document.getElementById("compareFiscalYear");
+
+    let selectedFiscalYear = defaultFiscalYear;
+    let availableFiscalYears = selectedFiscalYear ? [selectedFiscalYear] : [];
+    const csvCache = new Map();
+
+    populateDateSelect(dateFilter, chartDate);
+    populateDateSelect(compareFromDateSelect, compareFromDate);
+    populateDateSelect(compareToDateSelect, compareToDate);
+    populateFiscalYearSelect(availableFiscalYears, selectedFiscalYear);
+
+    // Make sure the chart script receives a valid date and year even when the URL is incomplete.
+    if (!params.get("date") || !availableDates.includes(params.get("date")) || !params.get("year")) {
+      params.set("date", chartDate);
+      if (selectedFiscalYear) params.set("year", String(selectedFiscalYear));
+      const nextUrl = window.location.pathname + "?" + params.toString();
+      window.history.replaceState(null, "", nextUrl);
+    }
+
+    dateFilter.addEventListener("change", function () {
+      const nextParams = new URLSearchParams(window.location.search);
+      nextParams.set("date", this.value);
+      nextParams.set("from", compareFromDateSelect.value);
+      nextParams.set("to", compareToDateSelect.value);
+      if (selectedFiscalYear) nextParams.set("year", String(selectedFiscalYear));
+
+      // The original chart caches CSV data in localStorage, so clear it before loading another chart date.
+      localStorage.clear();
+      window.location.href = "index.html?" + nextParams.toString();
+    });
+
+    document.getElementById("updateComparison").addEventListener("click", renderComparisonTables);
+    compareFromDateSelect.addEventListener("change", renderComparisonTables);
+    compareToDateSelect.addEventListener("change", renderComparisonTables);
+    compareFiscalYearSelect.addEventListener("change", function () {
+      selectedFiscalYear = Number(this.value);
+      renderComparisonTables();
+    });
+
+    // d3chartpbiclc.js dispatches this event when the built-in year button is clicked.
+    // This keeps the comparison tables synced with the year selected in the chart.
+    window.addEventListener("pbiclcYearChanged", function (event) {
+      const nextYear = event.detail && Number(event.detail.year);
+      if (!Number.isFinite(nextYear)) return;
+
+      selectedFiscalYear = nextYear;
+      populateFiscalYearSelect(availableFiscalYears, selectedFiscalYear);
+      renderComparisonTables();
+    });
+
+    renderComparisonTables();
+
+    function getInitialFiscalYear() {
+      const yearFromUrl = firstNumericYear(params.get("year"));
+      if (yearFromUrl) return yearFromUrl;
+
+      const yearFromContainer = firstNumericYear(
+        chartContainer ? chartContainer.getAttribute("data-year") : null
+      );
+      if (yearFromContainer) return yearFromContainer;
+
+      return new Date().getFullYear();
+    }
+
+    function firstNumericYear(value) {
+      if (!value) return null;
+      const match = String(value).match(/\d{4}/);
+      if (!match) return null;
+      const year = Number(match[0]);
+      return Number.isFinite(year) ? year : null;
+    }
+
+    function normalizeDateParam(value, fallback) {
+      return availableDates.includes(value) ? value : fallback;
+    }
+
+    function populateDateSelect(selectElement, selectedValue) {
+      selectElement.innerHTML = "";
+      availableDates.forEach(function (date) {
+        const option = document.createElement("option");
+        option.value = date;
+        option.textContent = date;
+        if (date === selectedValue) option.selected = true;
+        selectElement.appendChild(option);
+      });
+    }
+
+    function populateFiscalYearSelect(years, selectedValue) {
+      const uniqueYears = Array.from(new Set((years || []).filter(Number.isFinite))).sort(function (a, b) {
+        return b - a;
+      });
+
+      if (selectedValue && uniqueYears.indexOf(selectedValue) === -1) {
+        uniqueYears.unshift(selectedValue);
+      }
+
+      compareFiscalYearSelect.innerHTML = "";
+      uniqueYears.forEach(function (year) {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent = String(year);
+        if (year === selectedValue) option.selected = true;
+        compareFiscalYearSelect.appendChild(option);
+      });
+    }
+
+    function csvUrl(date) {
+      return DATA_BASE_PATH + "Contribution_" + date + ".csv";
+    }
+
+    function loadCsv(date) {
+      if (!csvCache.has(date)) {
+        csvCache.set(date, d3.csv(csvUrl(date)));
+      }
+      return csvCache.get(date);
+    }
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function safeContributionAmount(value) {
+      return Math.max(0, toNumber(value));
+    }
+
+    function rowTotalContribution(row) {
+      return safeContributionAmount(row.PaidAmt) + safeContributionAmount(row.PledgeAmt);
+    }
+
+    function normalizeName(value) {
+      return String(value || "").trim();
+    }
+
+    function formatDateLabel(dateString) {
+      const parts = dateString.split("_");
+      return parts.length === 3 ? parts[0] + "/" + parts[1] + "/" + parts[2] : dateString;
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(value || 0);
+    }
+
+    function renderLoading() {
+      document.getElementById("pbiclcChangeSubtitle").textContent = "Loading comparison data...";
+      document.getElementById("donorChangeSummary").textContent = "";
+      document.getElementById("cbpfChangeSummary").textContent = "";
+      document.getElementById("donorChangeTable").innerHTML = '<div class="pbiclc-loading">Loading donor changes...</div>';
+      document.getElementById("cbpfChangeTable").innerHTML = '<div class="pbiclc-loading">Loading CBPF changes...</div>';
+    }
+
+    function renderComparisonTables() {
+      const fromDate = compareFromDateSelect.value;
+      const toDate = compareToDateSelect.value;
+
+      const nextParams = new URLSearchParams(window.location.search);
+      nextParams.set("date", dateFilter.value);
+      nextParams.set("from", fromDate);
+      nextParams.set("to", toDate);
+      if (selectedFiscalYear) nextParams.set("year", String(selectedFiscalYear));
+      window.history.replaceState(null, "", window.location.pathname + "?" + nextParams.toString());
+
+      renderLoading();
+
+      Promise.all([loadCsv(fromDate), loadCsv(toDate)])
+        .then(function ([fromRowsRaw, toRowsRaw]) {
+          availableFiscalYears = getFiscalYears(fromRowsRaw.concat(toRowsRaw));
+          selectedFiscalYear = resolveFiscalYear(selectedFiscalYear, availableFiscalYears);
+          populateFiscalYearSelect(availableFiscalYears, selectedFiscalYear);
+
+          const fromRows = filterRowsByFiscalYear(fromRowsRaw, selectedFiscalYear);
+          const toRows = filterRowsByFiscalYear(toRowsRaw, selectedFiscalYear);
+
+          const donorRows = calculateDonorRows(fromRows, toRows);
+          const increasedDonors = new Set(
+            donorRows
+              .filter(function (row) { return row.change > EPSILON; })
+              .map(function (row) { return row.name; })
+          );
+
+          const cbpfRows = calculateCbpfRowsFromIncreasedDonors(fromRows, toRows, increasedDonors);
+
+          document.getElementById("pbiclcChangeSubtitle").textContent =
+            "Fiscal Year " + selectedFiscalYear + ": comparing total_contribution (PaidAmt + PledgeAmt) from " +
+            formatDateLabel(fromDate) + " to " + formatDateLabel(toDate) + ".";
+
+          renderChangeTable(
+            "donorChangeTable",
+            "donorChangeSummary",
+            donorRows,
+            "Donor",
+            {
+              emptyMessage: "No current-year donor rows with an increase or no change for this selection.",
+              summaryText: buildDonorSummary(donorRows)
+            }
+          );
+
+          renderChangeTable(
+            "cbpfChangeTable",
+            "cbpfChangeSummary",
+            cbpfRows,
+            "Pooled Fund",
+            {
+              showDonors: true,
+              emptyMessage: "No PooledFundName increases were found from the donors that increased.",
+              summaryText: buildCbpfSummary(cbpfRows, increasedDonors.size)
+            }
+          );
+        })
+        .catch(function (error) {
+          const message =
+            "Could not load one of the selected CSV files. Check that " +
+            csvUrl(fromDate) + " and " + csvUrl(toDate) + " exist and are served from the correct path.";
+
+          document.getElementById("pbiclcChangeSubtitle").textContent = "";
+          document.getElementById("donorChangeSummary").textContent = "";
+          document.getElementById("cbpfChangeSummary").textContent = "";
+          document.getElementById("donorChangeTable").innerHTML =
+            '<div class="pbiclc-error">' + message + "</div>";
+          document.getElementById("cbpfChangeTable").innerHTML =
+            '<div class="pbiclc-error">' + escapeHtml(String(error)) + "</div>";
+        });
+    }
+
+    function getFiscalYears(rows) {
+      return Array.from(new Set(rows
+        .map(function (row) { return Number(row.FiscalYear); })
+        .filter(Number.isFinite)
+      )).sort(function (a, b) { return b - a; });
+    }
+
+    function resolveFiscalYear(candidate, years) {
+      if (candidate && years.indexOf(candidate) > -1) return candidate;
+      if (years.length) return years[0];
+      return candidate || new Date().getFullYear();
+    }
+
+    function filterRowsByFiscalYear(rows, fiscalYear) {
+      return rows.filter(function (row) {
+        return Number(row.FiscalYear) === Number(fiscalYear);
+      });
+    }
+
+    function aggregateTotalByName(rows, nameField) {
+      const result = new Map();
+
+      rows.forEach(function (row) {
+        const name = normalizeName(row[nameField]);
+        if (!name) return;
+
+        if (!result.has(name)) {
+          result.set(name, {
+            name: name,
+            total_contribution: 0
+          });
+        }
+
+        result.get(name).total_contribution += rowTotalContribution(row);
+      });
+
+      return result;
+    }
+
+    function calculateDonorRows(fromRows, toRows) {
+      const fromMap = aggregateTotalByName(fromRows, "GMSDonorName");
+      const toMap = aggregateTotalByName(toRows, "GMSDonorName");
+      const names = new Set(Array.from(fromMap.keys()).concat(Array.from(toMap.keys())));
+
+      return Array.from(names)
+        .map(function (name) {
+          const fromValue = fromMap.has(name) ? fromMap.get(name).total_contribution : 0;
+          const toValue = toMap.has(name) ? toMap.get(name).total_contribution : 0;
+          const change = toValue - fromValue;
+
+          return {
+            name: name,
+            fromValue: fromValue,
+            toValue: toValue,
+            change: change
+          };
+        })
+        .filter(function (row) {
+          const appearsInCurrentYear = row.fromValue > EPSILON || row.toValue > EPSILON;
+          const increasedOrUnchanged = row.change >= -EPSILON;
+          return appearsInCurrentYear && increasedOrUnchanged;
+        })
+        .sort(function (a, b) {
+          return (
+            b.change - a.change ||
+            b.toValue - a.toValue ||
+            a.name.localeCompare(b.name)
+          );
+        });
+    }
+
+    function aggregateByDonorAndFund(rows, donorSet) {
+      const result = new Map();
+
+      rows.forEach(function (row) {
+        const donor = normalizeName(row.GMSDonorName);
+        const fund = normalizeName(row.PooledFundName);
+        if (!donor || !fund || !donorSet.has(donor)) return;
+
+        const key = donor + "\u0001" + fund;
+        if (!result.has(key)) {
+          result.set(key, {
+            donor: donor,
+            fund: fund,
+            total_contribution: 0
+          });
+        }
+
+        result.get(key).total_contribution += rowTotalContribution(row);
+      });
+
+      return result;
+    }
+
+    function calculateCbpfRowsFromIncreasedDonors(fromRows, toRows, increasedDonors) {
+      if (!increasedDonors.size) return [];
+
+      const fromMap = aggregateByDonorAndFund(fromRows, increasedDonors);
+      const toMap = aggregateByDonorAndFund(toRows, increasedDonors);
+      const keys = new Set(Array.from(fromMap.keys()).concat(Array.from(toMap.keys())));
+      const fundMap = new Map();
+
+      keys.forEach(function (key) {
+        const fromItem = fromMap.get(key);
+        const toItem = toMap.get(key);
+        const donor = (toItem || fromItem).donor;
+        const fund = (toItem || fromItem).fund;
+        const fromValue = fromItem ? fromItem.total_contribution : 0;
+        const toValue = toItem ? toItem.total_contribution : 0;
+        const change = toValue - fromValue;
+
+        if (change <= EPSILON) return;
+
+        if (!fundMap.has(fund)) {
+          fundMap.set(fund, {
+            name: fund,
+            fromValue: 0,
+            toValue: 0,
+            change: 0,
+            donors: new Set()
+          });
+        }
+
+        const current = fundMap.get(fund);
+        current.fromValue += fromValue;
+        current.toValue += toValue;
+        current.change += change;
+        current.donors.add(donor);
+      });
+
+      return Array.from(fundMap.values())
+        .map(function (row) {
+          row.donorList = Array.from(row.donors).sort().join(", ");
+          delete row.donors;
+          return row;
+        })
+        .sort(function (a, b) {
+          return (
+            b.change - a.change ||
+            b.toValue - a.toValue ||
+            a.name.localeCompare(b.name)
+          );
+        });
+    }
+
+    function buildDonorSummary(rows) {
+      const increasedCount = rows.filter(function (row) { return row.change > EPSILON; }).length;
+      const unchangedCount = rows.length - increasedCount;
+      return increasedCount + " increased; " + unchangedCount +
+        " unchanged in the selected FiscalYear. Decreases are hidden, and historical years are not included.";
+    }
+
+    function buildCbpfSummary(rows, increasedDonorCount) {
+      return rows.length + " PooledFundName rows received increased contribution from " +
+        increasedDonorCount + " from.";
+    }
+
+    function renderChangeTable(containerId, summaryId, rows, firstColumnLabel, options) {
+      const container = document.getElementById(containerId);
+      const summary = document.getElementById(summaryId);
+      const settings = options || {};
+
+      summary.textContent = settings.summaryText || "";
+
+      if (!rows.length) {
+        container.innerHTML = '<div class="pbiclc-empty">' + escapeHtml(settings.emptyMessage || "No rows for this selection.") + "</div>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      table.className = "pbiclc-change-table";
+
+      table.innerHTML =
+        "<thead>" +
+          "<tr>" +
+            "<th>" + escapeHtml(firstColumnLabel) + "</th>" +
+            "<th>Start</th>" +
+            "<th>End</th>" +
+            "<th>Change</th>" +
+            (settings.showDonors ? '<th class="pbiclc-donor-list-header">From</th>' : "") +
+          "</tr>" +
+        "</thead>";
+
+      const tbody = document.createElement("tbody");
+
+      rows.forEach(function (row) {
+        const tr = document.createElement("tr");
+        tr.className = row.change > EPSILON ? "pbiclc-increased" : "pbiclc-unchanged";
+
+        tr.innerHTML =
+          "<td>" + escapeHtml(row.name) + "</td>" +
+          "<td>" + formatMoney(row.fromValue) + "</td>" +
+          "<td>" + formatMoney(row.toValue) + "</td>" +
+          "<td>" + formatMoney(row.change) + "</td>" +
+          (settings.showDonors ? '<td class="pbiclc-donor-list-cell">' + escapeHtml(row.donorList || "") + "</td>" : "");
+
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+
+  <script type="text/javascript" src="./src/d3chartpbiclc.js"></script>
+</body>
+</html>
